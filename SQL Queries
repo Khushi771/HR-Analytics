@@ -1,0 +1,61 @@
+---List of healthy employees who are not much absent
+SELECT * FROM Absenteeism_at_work 
+WHERE social_drinker = 0 and 
+social_smoker = 0 AND
+body_mass_index < 25 AND
+absenteeism_time_in_hours < (
+  SELECT AVG(absenteeism_time_in_hours) FROM Absenteeism_at_work
+  )
+;
+
+---This results in 111 healthy eligibe employees 
+---Total budget = $1000
+---Per employee bonus will be $9
+
+---No. of non smokers
+SELECT COUNT(*) AS Nonsmokers FROM Absenteeism_at_work WHERE social_smoker=0;
+
+---There are 686 non smokers eligible for an insurance budget of $983,221
+---Assuming 5 working days per week with 8 working hours and 52 weeks a year
+---Additional wage per hour per employee is (983221/(5*8*52))/686 = $0.68
+
+---Query to get final data for power BI visualisation 
+SELECT a.ID,
+	r.Reason,
+    Month_of_absence,
+    Body_mass_index,
+CASE 
+	WHEN Body_mass_index < 18.5 THEN 'Underweight'
+    WHEN Body_mass_index BETWEEN 18.5 AND 25 THEN 'Healthy'
+    WHEN Body_mass_index BETWEEN 25 AND 30 THEN 'Overweight'
+    WHEN Body_mass_index > 30 THEN 'Obese'
+    ELSE 'Unknown'
+END AS BmiCategory,
+CASE 
+	WHEN month_of_absence IN (12,1,2) THEN 'Winter'
+    WHEN month_of_absence IN (3,4,5) THEN 'Spring'
+    WHEN month_of_absence IN (6,7,8) THEN 'Summer'
+    WHEN month_of_absence IN (9,10,11) THEN 'Autumn'
+    ELSE 'Unknown' 
+END AS SeasonNames,
+CASE 
+	WHEN age < 30 THEn 'JuniorAge'
+    WHEN age BETWEEN 30 AND 45 Then 'MiddleAge'
+    WHEN age >= 45 THEN 'SeniorAge'
+    ELSE 'Unknown'
+END AS AgeCategories,
+Day_of_the_week,
+Transportation_expense,
+Education,
+Son,
+Social_drinker,
+Social_smoker,
+Pet,
+Disciplinary_failure,
+Age,
+Absenteeism_time_in_hours
+FROM Absenteeism_at_work a 
+LEFT JOIN compensation c 
+ON a.ID = c.ID
+LEFT JOIN Reasons r 
+ON a.Reason_for_absence = r.Number;
